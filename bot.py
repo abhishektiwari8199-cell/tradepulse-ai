@@ -1,10 +1,27 @@
 import time
+import requests
 import yfinance as yf
+
+# Telegram Configuration (Token & Chat ID Configured)
+TELEGRAM_BOT_TOKEN = "9237671700:AAF9afF5zveuFMEkktewQ8azpcbDgwCQ4n0"
+TELEGRAM_CHAT_ID = "8168357841"
+
+def send_telegram_alert(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print(f"Telegram error: {e}")
 
 class IndianMarketBot:
     def __init__(self):
         self.market_name = "Indian Stock Market (NSE)"
-        self.symbol = "^NSEI"  # Nifty 50 symbol on Yahoo Finance
+        self.symbol = "^NSEI"
 
     def fetch_data(self):
         print(f"[{self.market_name}] Fetching live data for {self.symbol}...")
@@ -12,20 +29,21 @@ class IndianMarketBot:
             ticker = yf.Ticker(self.symbol)
             data = ticker.history(period="1d")
             current_price = data['Close'].iloc[-1]
-            return {"symbol": "NIFTY 50", "price": round(current_price, 2), "rsi": 50.0}
+            return {"symbol": "NIFTY 50", "price": round(current_price, 2)}
         except Exception as e:
             print(f"Error fetching Indian market data: {e}")
-            return {"symbol": "NIFTY 50", "price": 24550.25, "rsi": 50.0}
+            return {"symbol": "NIFTY 50", "price": 24550.25}
 
     def analyze(self, data):
-        print(f"--- 🇮🇳 {self.market_name} Analysis ---")
-        print(f"Asset: {data['symbol']} | Live Price: ₹{data['price']} | Status: Active Monitoring\n")
+        msg = f"🇮🇳 *{data['symbol']} Update*\nLive Price: ₹{data['price']}\nStatus: Monitoring Active"
+        print(msg)
+        send_telegram_alert(msg)
 
 
 class ForexMarketBot:
     def __init__(self):
         self.market_name = "Forex Market"
-        self.symbol = "USDINR=X"  # USD to INR Forex pair
+        self.symbol = "USDINR=X"
 
     def fetch_data(self):
         print(f"[{self.market_name}] Fetching live data for {self.symbol}...")
@@ -33,14 +51,15 @@ class ForexMarketBot:
             ticker = yf.Ticker(self.symbol)
             data = ticker.history(period="1d")
             current_price = data['Close'].iloc[-1]
-            return {"symbol": "USD/INR", "price": round(current_price, 2), "rsi": 48.0}
+            return {"symbol": "USD/INR", "price": round(current_price, 2)}
         except Exception as e:
             print(f"Error fetching Forex data: {e}")
-            return {"symbol": "USD/INR", "price": 83.42, "rsi": 48.0}
+            return {"symbol": "USD/INR", "price": 83.42}
 
     def analyze(self, data):
-        print(f"--- 🌍 {self.market_name} Analysis ---")
-        print(f"Asset: {data['symbol']} | Live Price: {data['price']} | Status: Active Monitoring\n")
+        msg = f"🌍 *{data['symbol']} Update*\nLive Price: {data['price']}\nStatus: Monitoring Active"
+        print(msg)
+        send_telegram_alert(msg)
 
 
 if __name__ == "__main__":
@@ -57,5 +76,5 @@ if __name__ == "__main__":
         forex_bot.analyze(fx_data)
 
         print("="*40)
-        print("Waiting 60 seconds for next live scan...\n")
-        time.sleep(60)  # Har 60 seconds me live check karega
+        print("Waiting 60 seconds for next scan...\n")
+        time.sleep(60)
